@@ -6,11 +6,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__
-from .backends import get_backend
+from . import __version__, copy
 from .errors import CopyGraphicsError
-from .flavors import Flavor
-from .mimes import detect_mime
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -37,24 +34,17 @@ def main(argv: list[str] | None = None) -> int:
 
     path = Path(args.file[0]).expanduser()
     try:
-        data = path.read_bytes()
+        mime = copy(path, args.mime)
+        size = path.stat().st_size
     except OSError as exc:
         print(f"copy-graphics: error: cannot read {path}: {exc.strerror or exc}", file=sys.stderr)
         return 1
-
-    if not data:
-        print(f"copy-graphics: error: {path} is empty", file=sys.stderr)
-        return 1
-
-    try:
-        mime = args.mime or detect_mime(path, data)
-        get_backend().copy([Flavor(mime, data)])
     except CopyGraphicsError as exc:
         print(f"copy-graphics: error: {exc}", file=sys.stderr)
         return 1
 
     if not args.quiet:
-        print(f"Copied {path.name} as {mime} ({_human_size(len(data))}) to the clipboard.")
+        print(f"Copied {path.name} as {mime} ({_human_size(size)}) to the clipboard.")
     return 0
 
 

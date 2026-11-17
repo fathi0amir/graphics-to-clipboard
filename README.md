@@ -53,6 +53,41 @@ on the clipboard with the right type. A file that detects as something other
 than an `image/*` or PDF/postscript type is refused rather than copied, and
 `--mime` overrides both the detection and that check.
 
+## Use it from Python
+
+The package is an ordinary importable library, so a script or notebook can call
+`copy_graphics.copy` directly:
+
+```python
+from copy_graphics import copy
+
+copy("logo.svg")                           # returns "image/svg+xml"
+copy("drawing.dat", mime="image/svg+xml")  # state the type instead of detecting it
+```
+
+When the bytes are already in memory there is no file to sniff, so name the
+type:
+
+```python
+from copy_graphics import copy_bytes
+
+copy_bytes(png_bytes, "image/png")
+```
+
+Both functions return the MIME type that went on the clipboard and raise a
+`CopyGraphicsError` subclass when the file is not a graphic
+(`UnknownFileTypeError`) or the platform clipboard is unusable
+(`ClipboardError`, `ClipboardUnavailableError`); all of those are re-exported
+from `copy_graphics`. `copy` raises `OSError` if the file cannot be read.
+
+Install it into the environment your script runs on: `uv tool install` only
+exposes the `copy-graphics` command and keeps the package in its own
+environment, which your interpreter cannot import.
+
+```console
+uv add git+https://github.com/<you>/copy-graphics      # or: %pip install git+<url>
+```
+
 ## How each platform is served
 
 * **Windows** – `win32clipboard`. The MIME type is registered as a clipboard
